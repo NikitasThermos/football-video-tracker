@@ -1,6 +1,6 @@
 [build-system]
 requires=["setuptools>=75.0", "wheel"] 
-build-backed = "setuptools.build_meta" 
+build-backend = "setuptools.build_meta" 
 
 [tool.pytest.ini_options] 
 addopts = "--cov=football_analysis" 
