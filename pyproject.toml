@@ -2,9 +2,3 @@
 requires=["setuptools>=75.0", "wheel"] 
 build-backend = "setuptools.build_meta" 
 
-[tool.pytest.ini_options] 
-addopts = "--cov=football_analysis" 
-testpaths = [
-    "tests", 
-]
-

@@ -10,7 +10,7 @@ def read_video(video_path):
             break
         frames.append(frame)
     return frames
-   
+
 
 def save_video(output_video_frames, output_video_path):
     fourcc = cv2.VideoWrite.fourcc(*"XVID")

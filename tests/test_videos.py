@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 
-import cv2
-import pytest
+import cv2  # noqa: F401
+import pytest  # noqa: F401
 
 from football_analysis.video_utils import read_video
 
@@ -15,4 +15,4 @@ def test_read_valid_video():
         frames = read_video("valid_video.mp4")
 
     assert frames == ["frame1", "frame2"]
-    
+
