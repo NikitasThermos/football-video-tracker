@@ -13,7 +13,7 @@ def read_video(video_path):
 
 
 def save_video(output_video_frames, output_video_path):
-    fourcc = cv2.VideoWrite.fourcc(*"XVID")
+    fourcc = cv2.VideoWriter.fourcc(*"XVID")
     out = cv2.VideoWriter(
         output_video_path,
         fourcc,
