@@ -6,7 +6,7 @@ import supervision as sv
 from ultralytics import YOLO
 
 
-def get_detections(frames, model_path='model/best.pt'):
+def get_detections(frames, model_path="model/best.pt"):
     model = YOLO(model_path)
     batch_size = 20
     detections = []
@@ -44,16 +44,16 @@ def predict_tracks(frames):
         detection_supervision = sv.Detections.from_ultralytics(detection)
 
         # convert goalkeeper to player id
-        detection_supervision.class_id = np.array([
-            player_id if cls_id == goalkeeper_id else cls_id
-            for cls_id in detection_supervision.class_id
-        ], dtype=np.int32)
-
+        detection_supervision.class_id = np.array(
+            [
+                player_id if cls_id == goalkeeper_id else cls_id
+                for cls_id in detection_supervision.class_id
+            ],
+            dtype=np.int32,
+        )
 
         # Track objects
-        detection_with_tracks = tracker.update_with_detections(
-            detection_supervision
-        )
+        detection_with_tracks = tracker.update_with_detections(detection_supervision)
 
         frame_players = {}
         frame_referees = {}
@@ -91,8 +91,8 @@ def get_object_tracks(frames, read_from_stub=False, stub_path=None):
 
     tracks = predict_tracks(frames)
 
-    if stub_path is not None: 
-        with open(stub_path, 'wb') as f:
+    if stub_path is not None:
+        with open(stub_path, "wb") as f:
             pickle.dump(tracks, f)
-   
+
     return tracks
