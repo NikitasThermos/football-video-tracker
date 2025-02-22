@@ -2,7 +2,7 @@ import os
 import pickle
 
 import numpy as np
-import sv
+import supervision as sv
 from ultralytics import YOLO
 
 
