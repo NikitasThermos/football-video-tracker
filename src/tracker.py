@@ -1,5 +1,4 @@
 import os
-import pickle
 
 import numpy as np
 import supervision as sv
@@ -19,80 +18,68 @@ def get_detections(frames, model_path="model/best.pt"):
 
 def predict_tracks(frames):
     detections = get_detections(frames)
-
-    tracks = {
-        "players": [],
-        "referees": [],
-        "ball": [],
-    }
-
-    tracker = sv.ByteTrack()
-
+    tracker = sv.ByteTracker()
     cls_names = detections[0].names
     cls_names_inv = {v: k for k, v in cls_names.items()}
 
-    player_id, referee_id, ball_id, goalkeeper_id = (
+    player_id, _, ball_id, goalkeeper_id = (
         cls_names_inv.get("player"),
         cls_names_inv.get("referee"),
         cls_names_inv.get("ball"),
         cls_names_inv.get("goalkeeper"),
     )
 
-    for frame_num, detection in enumerate(detections):
+    sv_detections = [
+        sv.Detections.from_ultralytics(detection) for detection in detections
+    ]
+    detection_with_tracks = (
+        tracker.update_with_detections(sv_detection) for sv_detection in sv_detections
+    )
 
-        # convert to supervision detection format
-        detection_supervision = sv.Detections.from_ultralytics(detection)
+    dtype = np.dtype(
+        [
+            ("frame_num", np.int32),
+            ("track_id", np.int32),
+            ("cls_id", np.int32),
+            ("bbox", np.float32, (4,)),
+        ]
+    )
+    detection_list = []
 
-        # convert goalkeeper to player id
-        detection_supervision.class_id = np.array(
+    for frame_num, (tracked_detections, original_detections) in enumerate(
+        zip(detection_with_tracks, sv_detections)
+    ):
+
+        tracked_detections.class_id = np.array(
             [
                 player_id if cls_id == goalkeeper_id else cls_id
-                for cls_id in detection_supervision.class_id
+                for cls_id in tracked_detections.class_id
             ],
             dtype=np.int32,
         )
 
-        # Track objects
-        detection_with_tracks = tracker.update_with_detections(detection_supervision)
+        for detection in tracked_detections:
+            bbox, _, _, cls_id, track_id, *_ = detection
+            if cls_id != ball_id:
+                bbox = np.array(bbox)
+                detection_list.append((frame_num, track_id, cls_id, bbox))
 
-        frame_players = {}
-        frame_referees = {}
-        frame_ball = {}
-
-        for frame_detection in detection_with_tracks:
-            bbox, _, _, cls_id, track_id, *_ = frame_detection
-            bbox = bbox.tolist()
-
-            if cls_id == player_id:
-                frame_players[track_id] = {"bbox": bbox}
-
-            if cls_id == referee_id:
-                frame_referees[track_id] = {"bbox": bbox}
-
-        for frame_detection in detection_supervision:
-            bbox, _, _, cls_id, *_ = frame_detection
-            bbox = bbox.tolist()
-
+        for detection in original_detections:
+            bbox, _, _, cls_id, *_ = detection
             if cls_id == ball_id:
-                frame_ball[1] = {"bbox": bbox}
+                bbox = np.array(bbox)
+                detection_list.append((frame_num, 1, cls_id, bbox))
 
-        tracks["players"].append(frame_players)
-        tracks["referees"].append(frame_referees)
-        tracks["ball"].append(frame_ball)
-
-    return tracks
+    return np.array(detection_list, dtype=dtype)
 
 
-def get_object_tracks(frames, read_from_stub=False, stub_path=None):
-    if read_from_stub and stub_path is not None and os.path.exists(stub_path):
-        with open(stub_path, "rb") as f:
-            tracks = pickle.load(f)
-        return tracks
+def get_object_tracks(frames, read_file=False, file_path=None):
+    if read_file and file_path is not None and os.path.exists(file_path):
+        return np.load(file_path)
 
     tracks = predict_tracks(frames)
 
-    if stub_path is not None:
-        with open(stub_path, "wb") as f:
-            pickle.dump(tracks, f)
+    if file_path is not None:
+        np.save(file_path, tracks)
 
     return tracks
