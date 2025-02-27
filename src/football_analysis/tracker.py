@@ -18,11 +18,13 @@ def get_detections(frames, model_path="model/best.pt"):
 
 def predict_tracks(frames):
     detections = get_detections(frames)
-    tracker = sv.ByteTracker()
+
+    tracker = sv.ByteTrack()
+
     cls_names = detections[0].names
     cls_names_inv = {v: k for k, v in cls_names.items()}
 
-    player_id, _, ball_id, goalkeeper_id = (
+    player_id, referee_id, ball_id, goalkeeper_id = (
         cls_names_inv.get("player"),
         cls_names_inv.get("referee"),
         cls_names_inv.get("ball"),
@@ -36,7 +38,18 @@ def predict_tracks(frames):
         tracker.update_with_detections(sv_detection) for sv_detection in sv_detections
     )
 
-    dtype = np.dtype(
+    player = np.dtype(
+        [
+            ("frame_num", np.int32),
+            ("track_id", np.int32),
+            ("cls_id", np.int32),
+            ("bbox", np.float32, (4,)),
+            ("team", np.int32),
+            ("color", np.float32, (3,)),
+        ]
+    )
+
+    other = np.dtype(
         [
             ("frame_num", np.int32),
             ("track_id", np.int32),
@@ -44,7 +57,10 @@ def predict_tracks(frames):
             ("bbox", np.float32, (4,)),
         ]
     )
-    detection_list = []
+
+    player_detecctions = []
+    referee_detections = []
+    ball_detections = []
 
     for frame_num, (tracked_detections, original_detections) in enumerate(
         zip(detection_with_tracks, sv_detections)
@@ -60,26 +76,42 @@ def predict_tracks(frames):
 
         for detection in tracked_detections:
             bbox, _, _, cls_id, track_id, *_ = detection
-            if cls_id != ball_id:
+            if cls_id == player_id:
                 bbox = np.array(bbox)
-                detection_list.append((frame_num, track_id, cls_id, bbox))
+                player_detecctions.append(
+                    (frame_num, track_id, cls_id, bbox, -1, np.array([0, 0, 255]))
+                )
+            elif cls_id == referee_id:
+                bbox = np.array(bbox)
+                referee_detections.append((frame_num, track_id, cls_id, bbox))
 
         for detection in original_detections:
             bbox, _, _, cls_id, *_ = detection
             if cls_id == ball_id:
                 bbox = np.array(bbox)
-                detection_list.append((frame_num, 1, cls_id, bbox))
+                ball_detections.append((frame_num, 1, cls_id, bbox))
 
-    return np.array(detection_list, dtype=dtype)
+    return (
+        np.array(player_detecctions, dtype=player),
+        np.array(referee_detections, dtype=other),
+        np.array(ball_detections, dtype=other),
+    )
 
 
-def get_object_tracks(frames, read_file=False, file_path=None):
-    if read_file and file_path is not None and os.path.exists(file_path):
-        return np.load(file_path)
+def get_object_tracks(frames, read_file=False, path=None):
+    if read_file and path is not None and os.path.exists(path):
+        players, referees, ball = (
+            np.load(path + "players.npy"),
+            np.load(path + "referee.npy"),
+            np.load(path + "ball.npy"),
+        )
+        return players, referees, ball
 
-    tracks = predict_tracks(frames)
+    players, referees, ball = predict_tracks(frames)
 
-    if file_path is not None:
-        np.save(file_path, tracks)
+    if path is not None:
+        np.save(path + 'players.npy', players)
+        np.save(path + 'referee.npy', referees)
+        np.save(path + 'ball.npy', ball)
 
-    return tracks
+    return players, referees, ball

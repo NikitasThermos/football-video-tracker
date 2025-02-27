@@ -5,7 +5,7 @@ from bbox_utils import get_bbox_width, get_center_of_bbox
 
 def draw_ellipse(frame, bbox, color, track_id=None):
     y2 = int(bbox[3])
-    x_center, _ = get_center_of_bbox()
+    x_center, _ = get_center_of_bbox(bbox)
     width = get_bbox_width(bbox)
 
     cv2.ellipse(
@@ -19,7 +19,6 @@ def draw_ellipse(frame, bbox, color, track_id=None):
         thickness=2,
         lineType=cv2.LINE_4,
     )
-
     rectangle_width = 40
     rectangle_height = 20
     x1_rect = x_center - rectangle_width // 2
@@ -35,7 +34,6 @@ def draw_ellipse(frame, bbox, color, track_id=None):
             color,
             cv2.FILLED,
         )
-
         x1_text = x1_rect + 12
         if track_id > 99:
             x1_text -= 10
@@ -55,7 +53,6 @@ def draw_ellipse(frame, bbox, color, track_id=None):
 def draw_triangle(frame, bbox, color):
     y = int(bbox[1])
     x, _ = get_center_of_bbox(bbox)
-
     triangle_points = np.array(
         [
             [x, y],
@@ -63,36 +60,31 @@ def draw_triangle(frame, bbox, color):
             [x + 10, y - 20],
         ]
     )
-
     cv2.drawContours(frame, [triangle_points], 0, color, cv2.FILLED)
     cv2.drawContours(frame, [triangle_points], 0, (0, 0, 0), 2)
 
     return frame
 
 
-def draw_annotations(video_frames, tracks):
+def draw_annotations(frames, players_list, referees_list, ball_list):
     output_video_frames = []
-    for frame_num, frame in enumerate(video_frames):
+    for frame_num, frame in enumerate(frames):
         frame = frame.copy()
 
-        player_list = tracks[
-            (tracks["cls_id"] == 2) & (tracks["frame_num"] == frame_num)
-        ]
-        ball_list = tracks[(tracks["cls_id"] == 0) & (tracks["frame_num"] == frame_num)]
-        referee_list = tracks[
-            (tracks["cls_id"] == 3) & (tracks["frame_num"] == frame_num)
-        ]
+        frame_players = players_list[players_list["frame_num"] == frame_num]
+        frame_referees = referees_list[referees_list["frame_num"] == frame_num]
+        frame_ball = ball_list[ball_list["frame_num"] == frame_num]
 
-        for player in player_list:
+        for player in frame_players:
             frame = draw_ellipse(frame, player["bbox"], (0, 0, 255), player["track_id"])
 
-        for referee in referee_list:
+        for referee in frame_referees:
             frame = draw_ellipse(
-                frame, referee["bbox"], (0, 0, 255), referee["track_id"]
+                frame, referee["bbox"], (0, 255, 255), referee["track_id"]
             )
 
-        for ball in ball_list:
-            frame = draw_triangle(frame, ball["bbox"], (0, 255, 0))
+        for ball in frame_ball:
+            frame = draw_ellipse(frame, ball["bbox"], (0, 255, 0))
 
         output_video_frames.append(frame)
 
