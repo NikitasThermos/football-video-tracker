@@ -1,4 +1,5 @@
 from drawing import draw_annotations
+from team_assigning import assign_teams
 from tracker import get_object_tracks
 from video_utils import read_video, save_video
 
@@ -8,6 +9,8 @@ def main():
     players, referees, ball = get_object_tracks(
         video_frames, read_file=True, file_path="tracks/"
     )
+
+    players = assign_teams(video_frames, players)
 
     output_frames = draw_annotations(video_frames, players, referees, ball)
 
