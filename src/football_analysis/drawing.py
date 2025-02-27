@@ -76,7 +76,7 @@ def draw_annotations(frames, players_list, referees_list, ball_list):
         frame_ball = ball_list[ball_list["frame_num"] == frame_num]
 
         for player in frame_players:
-            frame = draw_ellipse(frame, player["bbox"], (0, 0, 255), player["track_id"])
+            frame = draw_ellipse(frame, player["bbox"], player["color"].tolist(), player["track_id"])
 
         for referee in frame_referees:
             frame = draw_ellipse(
