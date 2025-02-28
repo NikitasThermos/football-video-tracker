@@ -66,7 +66,39 @@ def draw_triangle(frame, bbox, color):
     return frame
 
 
-def draw_annotations(frames, players_list, referees_list, ball_list):
+def draw_team_ball_control(frame, team_ball_control):
+    overlay = frame.copy()
+    cv2.rectangle(overlay, (1350, 850), (1900, 970), (255, 255, 255), -1)
+    alpha = 0.4
+    cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
+
+    team_1_percentage = team_ball_control.count(0) / len(team_ball_control) * 100
+    team_2_percentage = team_ball_control.count(1) / len(team_ball_control) * 100
+
+    cv2.putText(
+        frame,
+        f"Team 1: {team_1_percentage:.2f}%",
+        (1400, 900),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1,
+        (0, 0, 0),
+        3,
+    )
+
+    cv2.putText(
+        frame,
+        f"Team 2: {team_2_percentage:.2f}%",
+        (1400, 950),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1,
+        (0, 0, 0),
+        3,
+    )
+
+    return frame
+
+
+def draw_annotations(frames, players_list, referees_list, ball_list, team_ball_control):
     output_video_frames = []
     for frame_num, frame in enumerate(frames):
         frame = frame.copy()
@@ -76,7 +108,11 @@ def draw_annotations(frames, players_list, referees_list, ball_list):
         frame_ball = ball_list[ball_list["frame_num"] == frame_num]
 
         for player in frame_players:
-            frame = draw_ellipse(frame, player["bbox"], player["color"].tolist(), player["track_id"])
+            frame = draw_ellipse(
+                frame, player["bbox"], player["color"].tolist(), player["track_id"]
+            )
+            if player["has_ball"]:
+                frame = draw_triangle(frame, player["bbox"], (0, 0, 255))
 
         for referee in frame_referees:
             frame = draw_ellipse(
@@ -85,6 +121,8 @@ def draw_annotations(frames, players_list, referees_list, ball_list):
 
         for ball in frame_ball:
             frame = draw_ellipse(frame, ball["bbox"], (0, 255, 0))
+
+        frame = draw_team_ball_control(frame, team_ball_control[: frame_num + 1])
 
         output_video_frames.append(frame)
 

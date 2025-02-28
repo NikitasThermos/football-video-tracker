@@ -55,6 +55,7 @@ def predict_tracks(frames):
             ("bbox", np.float32, (4,)),
             ("team", np.int32),
             ("color", np.float32, (3,)),
+            ("has_ball", np.bool_),
         ]
     )
 
@@ -88,7 +89,7 @@ def predict_tracks(frames):
             if cls_id == player_id:
                 bbox = np.array(bbox)
                 player_detecctions.append(
-                    (frame_num, track_id, cls_id, bbox, -1, np.array([0, 0, 255]))
+                    (frame_num, track_id, cls_id, bbox, -1, np.array([0, 0, 255]), False)
                 )
             elif cls_id == referee_id:
                 bbox = np.array(bbox)
