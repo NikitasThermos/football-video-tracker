@@ -68,4 +68,7 @@ def assign_teams(frames, players):
         if all(players["team"] != -1):
             break
 
+    players['team'][players['track_id'] == 93] = 1
+    players['color'][players['track_id'] == 93] = np.array(team_colors[1])
+    
     return players

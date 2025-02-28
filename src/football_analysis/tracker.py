@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 import supervision as sv
 from ultralytics import YOLO
 
@@ -15,6 +16,14 @@ def get_detections(frames, model_path="model/best.pt"):
 
     return detections
 
+def interpolate_ball_positions(ball): 
+    ball_positions = [b[3] for b in ball]
+    df_ball_positions = pd.DataFrame(ball_positions, columns=['x1', 'y1', 'x2', 'y2'])
+    df_ball_positions = df_ball_positions.interpolate()
+    df_ball_positions = df_ball_positions.bfill()
+
+    ball_interpolated = [(frame_num, 1, 0, bbox) for frame_num, bbox in enumerate(df_ball_positions.to_numpy().tolist())]
+    return ball_interpolated
 
 def predict_tracks(frames):
     detections = get_detections(frames)
@@ -90,11 +99,16 @@ def predict_tracks(frames):
             if cls_id == ball_id:
                 bbox = np.array(bbox)
                 ball_detections.append((frame_num, 1, cls_id, bbox))
+                break
+        else: 
+            ball_detections.append((frame_num, 1, ball_id, []))
+        
+        ball = interpolate_ball_positions(ball_detections)
 
     return (
         np.array(player_detecctions, dtype=player),
         np.array(referee_detections, dtype=other),
-        np.array(ball_detections, dtype=other),
+        np.array(ball, dtype=other),
     )
 
 
