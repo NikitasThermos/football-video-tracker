@@ -16,14 +16,19 @@ def get_detections(frames, model_path="model/best.pt"):
 
     return detections
 
-def interpolate_ball_positions(ball): 
+
+def interpolate_ball_positions(ball):
     ball_positions = [b[3] for b in ball]
-    df_ball_positions = pd.DataFrame(ball_positions, columns=['x1', 'y1', 'x2', 'y2'])
+    df_ball_positions = pd.DataFrame(ball_positions, columns=["x1", "y1", "x2", "y2"])
     df_ball_positions = df_ball_positions.interpolate()
     df_ball_positions = df_ball_positions.bfill()
 
-    ball_interpolated = [(frame_num, 1, 0, bbox) for frame_num, bbox in enumerate(df_ball_positions.to_numpy().tolist())]
+    ball_interpolated = [
+        (frame_num, 1, 0, bbox)
+        for frame_num, bbox in enumerate(df_ball_positions.to_numpy().tolist())
+    ]
     return ball_interpolated
+
 
 def predict_tracks(frames):
     detections = get_detections(frames)
@@ -89,7 +94,15 @@ def predict_tracks(frames):
             if cls_id == player_id:
                 bbox = np.array(bbox)
                 player_detecctions.append(
-                    (frame_num, track_id, cls_id, bbox, -1, np.array([0, 0, 255]), False)
+                    (
+                        frame_num,
+                        track_id,
+                        cls_id,
+                        bbox,
+                        -1,
+                        np.array([0, 0, 255]),
+                        False,
+                    )
                 )
             elif cls_id == referee_id:
                 bbox = np.array(bbox)
@@ -101,9 +114,9 @@ def predict_tracks(frames):
                 bbox = np.array(bbox)
                 ball_detections.append((frame_num, 1, cls_id, bbox))
                 break
-        else: 
+        else:
             ball_detections.append((frame_num, 1, ball_id, []))
-        
+
         ball = interpolate_ball_positions(ball_detections)
 
     return (
@@ -125,8 +138,8 @@ def get_object_tracks(frames, read_file=False, path=None):
     players, referees, ball = predict_tracks(frames)
 
     if path is not None:
-        np.save(path + 'players.npy', players)
-        np.save(path + 'referee.npy', referees)
-        np.save(path + 'ball.npy', ball)
+        np.save(path + "players.npy", players)
+        np.save(path + "referee.npy", referees)
+        np.save(path + "ball.npy", ball)
 
     return players, referees, ball

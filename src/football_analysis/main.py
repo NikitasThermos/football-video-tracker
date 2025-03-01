@@ -1,4 +1,5 @@
 from ball_assigner import assign_ball_to_players
+from camera_movement import get_camera_movement
 from drawing import draw_annotations
 from team_assigning import assign_teams
 from tracker import get_object_tracks
@@ -14,8 +15,12 @@ def main():
     players = assign_teams(video_frames, players)
     players, team_ball_control = assign_ball_to_players(video_frames, players, ball)
 
+    camera_movement = get_camera_movement(
+        video_frames, stub_path="stubs/camera.pkl", read_from_stub=True
+    )
+
     output_frames = draw_annotations(
-        video_frames, players, referees, ball, team_ball_control
+        video_frames, players, referees, ball, team_ball_control, camera_movement
     )
 
     save_video(output_frames, "videos/output_videos/annotated_video.mp4")

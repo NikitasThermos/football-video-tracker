@@ -66,6 +66,36 @@ def draw_triangle(frame, bbox, color):
     return frame
 
 
+def draw_camera_movement(frame, camera_movement):
+    overlay = frame.copy()
+    cv2.rectangle(overlay, (0, 0), (500, 100), (255, 255, 255), -1)
+    alpha = 0.6
+    cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
+    x_movement, y_movement = camera_movement
+
+    frame = cv2.putText(
+        frame,
+        f"Camera Movement X: {x_movement:.2f}",
+        (10, 30),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1,
+        (0, 0, 0),
+        3,
+    )
+
+    frame = cv2.putText(
+        frame,
+        f"Camera Movement Y: {y_movement:.2f}",
+        (10, 60),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1,
+        (0, 0, 0),
+        3,
+    )
+
+    return frame
+
+
 def draw_team_ball_control(frame, team_ball_control):
     overlay = frame.copy()
     cv2.rectangle(overlay, (1350, 850), (1900, 970), (255, 255, 255), -1)
@@ -98,7 +128,9 @@ def draw_team_ball_control(frame, team_ball_control):
     return frame
 
 
-def draw_annotations(frames, players_list, referees_list, ball_list, team_ball_control):
+def draw_annotations(
+    frames, players_list, referees_list, ball_list, team_ball_control, camera_movement
+):
     output_video_frames = []
     for frame_num, frame in enumerate(frames):
         frame = frame.copy()
@@ -123,6 +155,7 @@ def draw_annotations(frames, players_list, referees_list, ball_list, team_ball_c
             frame = draw_ellipse(frame, ball["bbox"], (0, 255, 0))
 
         frame = draw_team_ball_control(frame, team_ball_control[: frame_num + 1])
+        frame = draw_camera_movement(frame, camera_movement[frame_num])
 
         output_video_frames.append(frame)
 
