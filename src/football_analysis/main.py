@@ -1,4 +1,5 @@
 from ball_assigner import assign_ball_to_players
+from camera_movement import adjust_position
 from drawing import draw_annotations
 from team_assigning import assign_teams
 from tracker import get_object_tracks
@@ -12,6 +13,9 @@ def main():
     )
 
     players = assign_teams(video_frames, players)
+
+    players = adjust_position(video_frames, players)
+
     players, team_ball_control = assign_ball_to_players(video_frames, players, ball)
 
     output_frames = draw_annotations(

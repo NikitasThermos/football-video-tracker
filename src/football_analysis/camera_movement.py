@@ -65,3 +65,13 @@ def get_camera_movement(frames, read_from_stub=False, stub_path=None, min_distan
             pickle.dump(camera_movement, f)
 
     return camera_movement
+
+
+def adjust_position(frames, players, path=None):
+    camera_movement = get_camera_movement(frames, stub_path=path, read_from_stub=True)
+    for num_frame in range(len(frames)):
+        players["position"][players["frame_num"] == num_frame] -= camera_movement[
+            num_frame
+        ]
+
+    return players
