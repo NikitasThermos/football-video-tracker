@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from bbox_utils import get_bbox_width, get_center_of_bbox
+from bbox_utils import get_bbox_width, get_center_of_bbox, get_foot_position
 
 
 def draw_ellipse(frame, bbox, color, track_id=None):
@@ -98,6 +98,25 @@ def draw_team_ball_control(frame, team_ball_control):
     return frame
 
 
+def draw_speed(frame, speed, bbox):
+    position = get_foot_position(bbox)
+    position = list(position)
+    position[1] += 40
+
+    position = tuple(map(int, position))
+
+    cv2.putText(
+        frame,
+        f"{speed:.2f} km/h",
+        position,
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.5,
+        (0, 0, 0),
+        2,
+    )
+    return frame
+
+
 def draw_annotations(
     frames, players_list, referees_list, ball_list, team_ball_control, camera_movement
 ):
@@ -115,6 +134,8 @@ def draw_annotations(
             )
             if player["has_ball"]:
                 frame = draw_triangle(frame, player["bbox"], (0, 0, 255))
+            if speed := player["speed"]:
+                frame = draw_speed(frame, speed, player["bbox"])
 
         for referee in frame_referees:
             frame = draw_ellipse(
