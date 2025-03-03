@@ -1,6 +1,7 @@
 from ball_assigner import assign_ball_to_players
 from camera_movement import adjust_position
 from drawing import draw_annotations
+from speed_estimator import add_speed
 from team_assigning import assign_teams
 from tracker import get_object_tracks
 from video_utils import read_video, save_video
@@ -14,9 +15,9 @@ def main():
     )
 
     players = assign_teams(video_frames, players)
-
     players = adjust_position(video_frames, players)
     players = transform_positions(players)
+    players = add_speed(players, len(video_frames))
 
     players, team_ball_control = assign_ball_to_players(video_frames, players, ball)
 
