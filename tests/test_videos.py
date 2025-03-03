@@ -18,10 +18,10 @@ def test_read_valid_video():
 
 
 def test_save_video():
-    """Test savind a video. 
-    Creates two dummy frames and 
-    test if VideoWriter was called with the right arguments 
-    and the right amount of times""" 
+    """Test savind a video.
+    Creates two dummy frames and
+    test if VideoWriter was called with the right arguments
+    and the right amount of times"""
     frame1 = np.zeros((480, 640, 3), dtype=np.uint8)
     frame2 = np.zeros((480, 640, 3), dtype=np.uint8)
 
@@ -34,12 +34,9 @@ def test_save_video():
 
         save_video(frames, output_path)
 
-        # Check if VideoWriter was instasiated with correct parameters 
+        # Check if VideoWriter was instasiated with correct parameters
         mock_videowriter.assert_called_once_with(
-            output_path,
-            cv2.VideoWriter.fourcc(*'XVID'), 
-            24, 
-            (640, 480)
+            output_path, cv2.VideoWriter.fourcc(*"XVID"), 24, (640, 480)
         )
 
         # Check if write() was called twice (for two frames)
@@ -47,4 +44,3 @@ def test_save_video():
 
         # Check if release() was called
         mock_writer_instance.release.assert_called_once()
-
