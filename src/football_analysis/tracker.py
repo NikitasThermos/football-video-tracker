@@ -3,6 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 import supervision as sv
+from bbox_utils import get_center_of_bbox, get_foot_position
 from ultralytics import YOLO
 
 
@@ -24,7 +25,7 @@ def interpolate_ball_positions(ball):
     df_ball_positions = df_ball_positions.bfill()
 
     ball_interpolated = [
-        (frame_num, 1, 0, bbox)
+        (frame_num, 1, 0, bbox, get_center_of_bbox(bbox))
         for frame_num, bbox in enumerate(df_ball_positions.to_numpy().tolist())
     ]
     return ball_interpolated
@@ -61,6 +62,8 @@ def predict_tracks(frames):
             ("team", np.int32),
             ("color", np.float32, (3,)),
             ("has_ball", np.bool_),
+            ("position", np.float32, (2,)),
+            ("speed", np.float32),
         ]
     )
 
@@ -70,6 +73,7 @@ def predict_tracks(frames):
             ("track_id", np.int32),
             ("cls_id", np.int32),
             ("bbox", np.float32, (4,)),
+            ("position", np.float32, (2,)),
         ]
     )
 
@@ -93,6 +97,7 @@ def predict_tracks(frames):
             bbox, _, _, cls_id, track_id, *_ = detection
             if cls_id == player_id:
                 bbox = np.array(bbox)
+                position = get_foot_position(bbox)
                 player_detecctions.append(
                     (
                         frame_num,
@@ -102,20 +107,24 @@ def predict_tracks(frames):
                         -1,
                         np.array([0, 0, 255]),
                         False,
+                        position,
+                        0,
                     )
                 )
             elif cls_id == referee_id:
                 bbox = np.array(bbox)
-                referee_detections.append((frame_num, track_id, cls_id, bbox))
+                position = get_foot_position(bbox)
+                referee_detections.append((frame_num, track_id, cls_id, bbox, position))
 
         for detection in original_detections:
             bbox, _, _, cls_id, *_ = detection
             if cls_id == ball_id:
                 bbox = np.array(bbox)
-                ball_detections.append((frame_num, 1, cls_id, bbox))
+                position = get_center_of_bbox(bbox)
+                ball_detections.append((frame_num, 1, cls_id, bbox, position))
                 break
         else:
-            ball_detections.append((frame_num, 1, ball_id, []))
+            ball_detections.append((frame_num, 1, ball_id, [], (0, 0)))
 
         ball = interpolate_ball_positions(ball_detections)
 
