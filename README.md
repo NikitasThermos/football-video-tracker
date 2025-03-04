@@ -5,7 +5,8 @@ Based on that [project](https://github.com/abdullahtarek/football_analysis)
 The project receives a football video, and tracks the players, the referees and the ball. The detections are made using a customly trained YOLO model on that [dataset](https://universe.roboflow.com/roboflow-jvuqo/football-players-detection-3zvbc). 
 From the trackings we extract information for which player has the possesion of the ball on each frame. Further, we assign each player on a team based on the t-shirt color allowing us to calculate the total team possesion. Further information can be extracted such as the speed of each player. 
 The output of the project is a video that has all extra infromation depicted on each frame. Improvement were made on the original project to making it faster and using less memory 
-![Screenshot](img/football_img.png) 
+
+![Screenshot](img/football_image.png) 
 
 # Modules 
 * YOLO: A YOLO model trained on football annotated pictures is initialy used to make bounding box predictions for players, referees and the ball on each frame.
